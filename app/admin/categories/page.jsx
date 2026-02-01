@@ -38,7 +38,8 @@ export default function CategoriesPage() {
                 productAPI.getAll()
             ]);
             setCategories(catRes.data);
-            setProducts(prodRes.data);
+            // Normalize products response shape: some endpoints return { products: [...] } while others return an array directly
+            setProducts(prodRes.data?.products || prodRes.data || []);
         } catch (error) {
             console.error('Error fetching categories:', error);
             toast.error('Failed to load category data');
@@ -48,6 +49,7 @@ export default function CategoriesPage() {
     };
 
     const getProductCount = (categoryId) => {
+        if (!Array.isArray(products)) return 0;
         return products.filter(p => p.category?._id === categoryId || p.category === categoryId).length;
     };
 
