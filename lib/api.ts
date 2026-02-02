@@ -6,7 +6,7 @@ const isProd = typeof window !== 'undefined' && !window.location.hostname.includ
 const API = axios.create({
     // Use your actual backend domain here
     baseURL: isProd 
-        ? 'https://api.nexlyndistribution.com/api' // Replace with your actual live API URL
+        ? 'https://backend.nexlyndistribution.com/api' // Replace with your actual live API URL
         : 'http://localhost:5000/api', 
     headers: {
         'Content-Type': 'application/json',
