@@ -10,6 +10,9 @@ const API = axios.create({
         : 'http://localhost:5000/api', 
     headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
+    'Expires': '0',
     },
 });
 
@@ -49,7 +52,9 @@ export const categoryAPI = {
 };
 
 export const bannerAPI = {
-    getAll: () => API.get('/banners'),
+    // Adding a timestamp prevents the browser from serving a cached version
+    getAll: () => API.get(`/banners?t=${new Date().getTime()}`),
+    
     create: (data: FormData) => API.post('/banners', data, formDataConfig),
     update: (id: string, data: FormData) => API.put(`/banners/${id}`, data, formDataConfig),
     delete: (id: string) => API.delete(`/banners/${id}`),

@@ -32,7 +32,7 @@ export default function HomeClient({ initialBanners, initialCategories, initialP
     useEffect(() => {
 
         const fetchData = async () => {
-            if (initialBanners) return;
+            // if (initialBanners) return;
             try {
                 setLoading(true);
                 const [bannerRes, categoryRes, productRes] = await Promise.all([

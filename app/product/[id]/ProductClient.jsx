@@ -89,7 +89,7 @@ export default function ProductClient({ id, initialProduct }) {
                                                     src={optimizeImage(img)}
                                                     alt={`${product.name} thumb ${index}`}
                                                     fill
-                                                    className="object-cover"
+                                                    className="object-contain"
                                                 />
                                             </button>
                                         ))}
