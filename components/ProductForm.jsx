@@ -122,47 +122,48 @@ export default function ProductForm({ initialData = null, isEdit = false }) {
 
     // --- Submission ---
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSubmitting(true);
+    e.preventDefault();
+    setSubmitting(true);
 
-        try {
-            const formData = new FormData();
-            formData.append('name', name);
-            formData.append('price', price);
-            formData.append('category', category);
-            formData.append('description', description);
-            formData.append('inStock', inStock);
+    try {
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('price', price);
+        formData.append('category', category);
+        formData.append('description', description);
+        formData.append('inStock', inStock);
 
-            // Filter out empty ones before sending
-            const filteredFeatures = keyFeatures.filter(f => f.trim() !== '');
-            const filteredSpecs = specifications.filter(s => s.label.trim() !== '' && s.value.trim() !== '');
+        const filteredFeatures = keyFeatures.filter(f => f.trim() !== '');
+        const filteredSpecs = specifications.filter(s => s.label.trim() !== '' && s.value.trim() !== '');
 
-            formData.append('keyFeatures', JSON.stringify(filteredFeatures));
-            formData.append('specifications', JSON.stringify(filteredSpecs));
+        formData.append('keyFeatures', JSON.stringify(filteredFeatures));
+        formData.append('specifications', JSON.stringify(filteredSpecs));
 
-            // Append new files
-            imageFiles.forEach(file => {
-                formData.append('images', file);
-            });
+        // --- THE FIX: Send the list of existing images to keep ---
+        // This tells the backend: "Only keep these URLs, delete anything else"
+        formData.append('existingImages', JSON.stringify(existingImages));
 
-            // Special handling for editing: we might need to send the list of existing images to keep
-            if (isEdit) {
-                await productAPI.update(initialData._id, formData);
-                toast.success('Product updated successfully');
-            } else {
-                await productAPI.create(formData);
-                toast.success('Product published successfully');
-            }
+        // Append new files
+        imageFiles.forEach(file => {
+            formData.append('images', file);
+        });
 
-            router.push('/admin/products');
-        } catch (error) {
-            console.error('Error saving product:', error);
-            toast.error('Error saving product');
-        } finally {
-            setSubmitting(false);
+        if (isEdit) {
+            await productAPI.update(initialData._id, formData);
+            toast.success('Product updated successfully');
+        } else {
+            await productAPI.create(formData);
+            toast.success('Product published successfully');
         }
-    };
 
+        router.push('/admin/products');
+    } catch (error) {
+        console.error('Error saving product:', error);
+        toast.error('Error saving product');
+    } finally {
+        setSubmitting(false);
+    }
+};
     return (
         <form onSubmit={handleSubmit} className="space-y-12 max-w-5xl mx-auto pb-20">
             <div className="flex items-center justify-between border-b border-gray-100 pb-8">

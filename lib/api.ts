@@ -1,9 +1,13 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Determine if we are on local or production
+const isProd = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
 
 const API = axios.create({
-    baseURL: API_URL,
+    // Use your actual backend domain here
+    baseURL: isProd 
+        ? 'https://api.nexlyndistribution.com/api' // Replace with your actual live API URL
+        : 'http://localhost:5000/api', 
     headers: {
         'Content-Type': 'application/json',
     },

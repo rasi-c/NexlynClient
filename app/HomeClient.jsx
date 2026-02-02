@@ -20,6 +20,17 @@ export default function HomeClient({ initialBanners, initialCategories, initialP
     const [error, setError] = useState(null);
 
     useEffect(() => {
+        const fetchFeatured = async () => {
+            
+            // Adding a timestamp ensures the browser doesn't use a cached version
+            const res = await productAPI.getFeatured({ _t: Date.now() });
+            setProducts(res.data);
+        };
+        fetchFeatured();
+    }, []);
+
+    useEffect(() => {
+
         const fetchData = async () => {
             if (initialBanners) return;
             try {
@@ -122,9 +133,14 @@ export default function HomeClient({ initialBanners, initialCategories, initialP
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {products.map((product) => (
-                            <ProductCard key={product._id} product={product} />
-                        ))}
+                        {products && products.length > 0 ? (
+                            products.map((product) => (
+                                // Only render if product has images
+                                product?.images?.length > 0 && <ProductCard key={product._id} product={product} />
+                            ))
+                        ) : (
+                            <p>No featured products found.</p>
+                        )}
                     </div>
 
                     <div className="mt-12 text-center md:hidden">

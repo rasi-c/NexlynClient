@@ -61,7 +61,7 @@ const ProductCard = ({ product }) => {
                         <div className="flex flex-col">
                             <span className="text-gray-400 text-xs uppercase font-medium">Price</span>
                             <span className="text-red-600 font-extrabold text-xl">
-                                ₹{product.price.toLocaleString('en-IN')}
+                                AED{product.price.toLocaleString('en-AE')}
                             </span>
                         </div>
 

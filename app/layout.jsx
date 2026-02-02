@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"] });
 const siteConfig = {
     name: "NEXLYN",
     description: "Discover a curated collection of premium products designed for modern living. Quality, innovation, and style at NEXLYN.",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "https://nexlyn.com",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://nexlyndistribution.com",
     ogImage: "/og-image.png",
 };
 
