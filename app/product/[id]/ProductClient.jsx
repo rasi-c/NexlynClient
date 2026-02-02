@@ -109,7 +109,7 @@ export default function ProductClient({ id, initialProduct }) {
                                     </h1>
                                     <div className="flex flex-wrap items-center gap-4">
                                         <span className="text-3xl md:text-4xl font-black text-red-600">
-                                            ₹{product.price.toLocaleString('en-IN')}
+                                            ${product.price.toLocaleString('en-AE')}
                                         </span>
                                         {product.inStock ? (
                                             <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full flex items-center">
