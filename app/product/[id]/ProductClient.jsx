@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { FaWhatsapp, FaCheckCircle } from 'react-icons/fa';
+import { FaWhatsapp, FaCheckCircle, FaYoutube, FaFilePdf, FaExternalLinkAlt } from 'react-icons/fa';
 import Loading from '../../../components/Loading';
 import ErrorMessage from '../../../components/ErrorMessage';
 import { productAPI } from '../../../lib/api';
@@ -112,6 +112,15 @@ export default function ProductClient({ id, initialProduct }) {
     const [activeImage, setActiveImage] = useState(initialProduct?.images?.[0] || null);
     const [activeTab, setActiveTab] = useState('description');
     const [error, setError] = useState(null);
+    const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+    const [isHovered, setIsHovered] = useState(false);
+
+    const handleMouseMove = (e) => {
+        const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+        const x = ((e.clientX - left) / width) * 100;
+        const y = ((e.clientY - top) / height) * 100;
+        setZoomPos({ x, y });
+    };
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -156,28 +165,48 @@ export default function ProductClient({ id, initialProduct }) {
     const tabs = [
         { id: 'description', label: 'Detailed Description', content: product.detailedDescription },
         { id: 'specifications', label: 'Specifications', content: product.specifications },
-        { id: 'applications', label: 'Applications', content: product.useCases }
+        { id: 'documents', label: 'Documents', content: product.useCases }
     ];
+
+    const getYoutubeId = (url) => {
+        if (!url) return null;
+        const regExp = /^.*(youtu.be\/|v\/|u\/|w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
 
     return (
         <div className="min-h-screen pt-28 pb-20 bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Product Card */}
-                <div className="bg-white rounded-3xl shadow-xl overflow-hidden mb-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+                {/* Product Section (Flatter) */}
+                <div className="mb-16">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
 
                         {/* LEFT SIDE: Images */}
-                        <div className="p-6 md:p-10 bg-white">
+                        <div className="bg-white rounded-[2.5rem] p-4 md:p-6 border border-gray-100 shadow-sm">
                             {/* Main Image */}
-                            <div className="relative h-[300px] md:h-[450px] lg:h-[500px] w-full rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shadow-inner">
-                                <Image
-                                    src={optimizeImage(activeImage) || '/placeholder-product.png'}
-                                    alt={product.name}
-                                    fill
-                                    className="object-contain p-4 md:p-8"
-                                    priority
-                                    sizes="(max-width: 768px) 100vw, 50vw"
-                                />
+                            <div
+                                className="relative h-[350px] md:h-[500px] lg:h-[550px] w-full rounded-3xl overflow-hidden bg-gray-50 shadow-inner cursor-zoom-in"
+                                onMouseMove={handleMouseMove}
+                                onMouseEnter={() => setIsHovered(true)}
+                                onMouseLeave={() => setIsHovered(false)}
+                            >
+                                <div
+                                    className="relative w-full h-full transition-transform duration-200 ease-out"
+                                    style={{
+                                        transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                                        transform: isHovered ? 'scale(2.2)' : 'scale(1)'
+                                    }}
+                                >
+                                    <Image
+                                        src={optimizeImage(activeImage) || '/placeholder-product.png'}
+                                        alt={product.name}
+                                        fill
+                                        className="object-contain p-4 md:p-8"
+                                        priority
+                                        sizes="(max-width: 768px) 100vw, 50vw"
+                                    />
+                                </div>
                             </div>
 
                             {/* Thumbnails */}
@@ -203,7 +232,7 @@ export default function ProductClient({ id, initialProduct }) {
                         </div>
 
                         {/* RIGHT SIDE: Product Info */}
-                        <div className="p-6 md:p-10 bg-gray-50 flex flex-col justify-between">
+                        <div className="flex flex-col justify-center py-4 lg:py-8 lg:px-4">
                             <div className="space-y-6">
                                 {/* Category */}
                                 <span className="inline-block px-4 py-2 bg-red-50 text-red-600 rounded-full text-xs font-bold uppercase tracking-widest">
@@ -244,7 +273,7 @@ export default function ProductClient({ id, initialProduct }) {
                             {/* Quote Button */}
                             <button
                                 onClick={handleWhatsApp}
-                                className="mt-8 w-full bg-red-600 hover:bg-red-700 text-white py-5 px-8 rounded-2xl font-black text-lg flex items-center justify-center space-x-3 transition-all transform hover:scale-105 shadow-xl shadow-red-200"
+                                className="mt-10 w-full bg-red-600 hover:bg-red-700 text-white py-5 px-8 rounded-2xl font-black text-lg flex items-center justify-center space-x-3 transition-all transform hover:scale-[1.02] shadow-xl shadow-red-200"
                             >
                                 <FaWhatsapp className="text-2xl" />
                                 <span>Request Quote on WhatsApp</span>
@@ -253,8 +282,8 @@ export default function ProductClient({ id, initialProduct }) {
                     </div>
                 </div>
 
-                {/* Tabbed Content Section */}
-                <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+                {/* Tabbed Content Section (Flatter) */}
+                <div className="pt-10 border-t border-gray-200">
                     {/* Tab Headers */}
                     <div className="border-b border-gray-200">
                         <div className="flex overflow-x-auto scrollbar-hide">
@@ -262,12 +291,15 @@ export default function ProductClient({ id, initialProduct }) {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex-1 min-w-[150px] px-6 py-5 font-bold text-sm md:text-base transition-all ${activeTab === tab.id
-                                        ? 'text-red-600 border-b-4 border-red-600 bg-red-50/50'
-                                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                                    className={`flex-1 min-w-[150px] px-6 py-6 font-bold text-sm md:text-base transition-all relative ${activeTab === tab.id
+                                        ? 'text-red-600'
+                                        : 'text-gray-400 hover:text-gray-600'
                                         }`}
                                 >
                                     {tab.label}
+                                    {activeTab === tab.id && (
+                                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-red-600 rounded-full" />
+                                    )}
                                 </button>
                             ))}
                         </div>
@@ -280,29 +312,151 @@ export default function ProductClient({ id, initialProduct }) {
                                 key={tab.id}
                                 className={`${activeTab === tab.id ? 'block' : 'hidden'}`}
                             >
-                                {tab.content ? (
-                                    <div className="prose prose-gray max-w-none">
-                                        {tab.id === 'specifications' ? (
-                                            <SpecificationsTable content={tab.content} />
-                                        ) : (
-                                            <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                                                {tab.content}
+                                {tab.id === 'documents' ? (
+                                    <div className="space-y-10">
+                                        {/* Use Cases / Application Text */}
+                                        {product.useCases && (
+                                            <div className="prose prose-gray max-w-none">
+                                                <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                                                    {product.useCases}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Links Section */}
+                                        {(product.youtubeLink || product.pdfLink) && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-gray-100">
+                                                {/* YouTube Link */}
+                                                {product.youtubeLink && (
+                                                    <a
+                                                        href={product.youtubeLink}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="group relative block overflow-hidden rounded-2xl bg-gray-50 border border-gray-100 transition-all hover:shadow-xl hover:-translate-y-1"
+                                                    >
+                                                        <div className="relative aspect-video w-full bg-black">
+                                                            {getYoutubeId(product.youtubeLink) ? (
+                                                                <>
+                                                                    <Image
+                                                                        src={`https://img.youtube.com/vi/${getYoutubeId(product.youtubeLink)}/maxresdefault.jpg`}
+                                                                        alt="Video Thumbnail"
+                                                                        fill
+                                                                        className="object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                                                                    />
+                                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                                        <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform">
+                                                                            <FaYoutube className="text-white text-3xl" />
+                                                                        </div>
+                                                                    </div>
+                                                                </>
+                                                            ) : (
+                                                                <div className="absolute inset-0 flex flex-col items-center justify-center text-red-600">
+                                                                    <FaYoutube className="text-6xl mb-2" />
+                                                                    <span className="font-bold uppercase tracking-widest text-xs">Watch Video</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="p-4 flex items-center justify-between">
+                                                            <div>
+                                                                <h4 className="font-bold text-gray-900">Product Video Guide</h4>
+                                                                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Watch on YouTube</p>
+                                                            </div>
+                                                            <FaExternalLinkAlt className="text-gray-300 group-hover:text-red-600 transition-colors" />
+                                                        </div>
+                                                    </a>
+                                                )}
+
+                                                {/* PDF Link */}
+                                                {product.pdfLink && (
+                                                    <a
+                                                        href={product.pdfLink}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="group relative block overflow-hidden rounded-2xl bg-gray-50 border border-gray-100 transition-all hover:shadow-xl hover:-translate-y-1"
+                                                    >
+                                                        <div className="relative aspect-video w-full bg-white flex items-center justify-center overflow-hidden">
+                                                            {/* We use a stylized document preview for technical datasheets */}
+                                                            <div className="absolute inset-0 bg-gray-50 flex flex-col p-4 opacity-40 group-hover:opacity-60 transition-opacity">
+                                                                <div className="w-full h-4 bg-gray-300 rounded-sm mb-2"></div>
+                                                                <div className="w-2/3 h-3 bg-gray-200 rounded-sm mb-4"></div>
+                                                                <div className="grid grid-cols-2 gap-2 mb-4">
+                                                                    <div className="h-16 bg-gray-200 rounded-lg"></div>
+                                                                    <div className="h-16 bg-gray-200 rounded-lg"></div>
+                                                                </div>
+                                                                <div className="w-full h-2 bg-gray-200 rounded-sm mb-1"></div>
+                                                                <div className="w-full h-2 bg-gray-200 rounded-sm mb-1"></div>
+                                                                <div className="w-3/4 h-2 bg-gray-200 rounded-sm"></div>
+                                                            </div>
+
+                                                            <div className="relative z-10 text-center transform group-hover:scale-110 transition-transform duration-500">
+                                                                <div className="relative inline-block">
+                                                                    <FaFilePdf className="text-7xl text-red-600 drop-shadow-lg" />
+                                                                    <div className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md">
+                                                                        <img
+                                                                            src={`https://www.google.com/s2/favicons?domain=mikrotik.com&sz=32`}
+                                                                            alt="Mikrotik"
+                                                                            className="w-4 h-4 rounded-full"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                                <span className="block font-black text-gray-900 uppercase tracking-widest text-[10px] mt-3">Tech Datasheet</span>
+                                                            </div>
+
+                                                            {/* Overlay for "Open PDF" */}
+                                                            <div className="absolute inset-0 bg-red-600/0 group-hover:bg-red-600/10 transition-colors flex items-center justify-center">
+                                                                <div className="bg-red-600 text-white px-4 py-2 rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 transition-all transform translate-y-4 group-hover:translate-y-0">
+                                                                    View Document
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="p-4 flex items-center justify-between bg-white border-t border-gray-50">
+                                                            <div>
+                                                                <h4 className="font-bold text-gray-900">Technical Datasheet</h4>
+                                                                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Mikrotik Official Link</p>
+                                                            </div>
+                                                            <FaExternalLinkAlt className="text-gray-300 group-hover:text-red-600 transition-colors" />
+                                                        </div>
+                                                    </a>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {!product.useCases && !product.youtubeLink && !product.pdfLink && (
+                                            <div className="text-center py-12">
+                                                <div className="text-6xl mb-4">📝</div>
+                                                <p className="text-gray-400 font-medium">
+                                                    No documents available for this product.
+                                                </p>
                                             </div>
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="text-center py-12">
-                                        <div className="text-6xl mb-4">📝</div>
-                                        <p className="text-gray-400 font-medium">
-                                            No {tab.label.toLowerCase()} available for this product.
-                                        </p>
-                                    </div>
+                                    <>
+                                        {tab.content ? (
+                                            <div className="prose prose-gray max-w-none">
+                                                {tab.id === 'specifications' ? (
+                                                    <SpecificationsTable content={tab.content} />
+                                                ) : (
+                                                    <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                                                        {tab.content}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-12">
+                                                <div className="text-6xl mb-4">📝</div>
+                                                <p className="text-gray-400 font-medium">
+                                                    No {tab.label.toLowerCase()} available for this product.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

@@ -7,6 +7,21 @@ const nextConfig = {
                 hostname: 'res.cloudinary.com',
                 pathname: '/**',
             },
+            {
+                protocol: 'https',
+                hostname: 'img.youtube.com',
+                pathname: '/**',
+            },
+            {
+                protocol: 'https',
+                hostname: 's2.googleusercontent.com',
+                pathname: '/**',
+            },
+            {
+                protocol: 'https',
+                hostname: 'www.google.com',
+                pathname: '/**',
+            }
         ],
     },
     // Other production-ready settings

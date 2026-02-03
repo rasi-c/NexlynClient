@@ -32,6 +32,8 @@ export default function ProductForm({ initialData = null, isEdit = false }) {
     const [specifications, setSpecifications] = useState('');
     const [useCases, setUseCases] = useState('');
     const [inStock, setInStock] = useState(true);
+    const [youtubeLink, setYoutubeLink] = useState('');
+    const [pdfLink, setPdfLink] = useState('');
 
     // Dynamic Lists
     const [keyFeatures, setKeyFeatures] = useState(['']);
@@ -54,6 +56,8 @@ export default function ProductForm({ initialData = null, isEdit = false }) {
             setInStock(initialData.inStock !== undefined ? initialData.inStock : true);
             setKeyFeatures(initialData.keyFeatures?.length > 0 ? initialData.keyFeatures : ['']);
             setExistingImages(initialData.images || []);
+            setYoutubeLink(initialData.youtubeLink || '');
+            setPdfLink(initialData.pdfLink || '');
         }
     }, [initialData]);
 
@@ -133,6 +137,8 @@ export default function ProductForm({ initialData = null, isEdit = false }) {
             formData.append('specifications', specifications);
             formData.append('useCases', useCases);
             formData.append('inStock', inStock);
+            formData.append('youtubeLink', youtubeLink);
+            formData.append('pdfLink', pdfLink);
 
             const filteredFeatures = keyFeatures.filter(f => f.trim() !== '');
             formData.append('keyFeatures', JSON.stringify(filteredFeatures));
@@ -320,7 +326,7 @@ export default function ProductForm({ initialData = null, isEdit = false }) {
                     {/* Use Cases Card */}
                     <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
                         <h3 className="text-xl font-bold flex items-center text-gray-900">
-                            <FaList className="mr-3 text-red-600" /> Applications & Use Cases
+                            <FaList className="mr-3 text-red-600" /> Documents & External Links
                         </h3>
                         <div>
                             <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Where to Use This Product</label>
@@ -331,6 +337,25 @@ export default function ProductForm({ initialData = null, isEdit = false }) {
                                 className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-medium resize-none"
                                 placeholder="Describe ideal use cases, applications, and scenarios for this product"
                             ></textarea>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">YouTube Video Link</label>
+                                <input
+                                    type="url" value={youtubeLink} onChange={(e) => setYoutubeLink(e.target.value)}
+                                    className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-medium"
+                                    placeholder="https://www.youtube.com/watch?v=..."
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">PDF Document Link</label>
+                                <input
+                                    type="url" value={pdfLink} onChange={(e) => setPdfLink(e.target.value)}
+                                    className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-medium"
+                                    placeholder="https://mikrotik.com/...pdf"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
