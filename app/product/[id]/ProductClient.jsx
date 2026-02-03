@@ -248,7 +248,7 @@ export default function ProductClient({ id, initialProduct }) {
                                 <div className="flex items-baseline space-x-2">
                                     <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Price</span>
                                     <span className="text-4xl font-black text-red-600">
-                                        AED {product.price.toLocaleString('en-US')}
+                                        ${product.price.toLocaleString('en-US')}
                                     </span>
                                 </div>
 

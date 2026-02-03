@@ -215,7 +215,7 @@ export default function ProductForm({ initialData = null, isEdit = false }) {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Price (₹)</label>
+                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Price ($)</label>
                                     <input
                                         type="number" required value={price} onChange={(e) => setPrice(e.target.value)}
                                         className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-black text-red-600"
