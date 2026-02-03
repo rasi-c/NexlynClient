@@ -28,11 +28,13 @@ export default function ProductForm({ initialData = null, isEdit = false }) {
     const [price, setPrice] = useState('');
     const [category, setCategory] = useState('');
     const [description, setDescription] = useState('');
+    const [detailedDescription, setDetailedDescription] = useState('');
+    const [specifications, setSpecifications] = useState('');
+    const [useCases, setUseCases] = useState('');
     const [inStock, setInStock] = useState(true);
 
     // Dynamic Lists
     const [keyFeatures, setKeyFeatures] = useState(['']);
-    const [specifications, setSpecifications] = useState([{ label: '', value: '' }]);
 
     // Images
     const [existingImages, setExistingImages] = useState([]); // URLs from backend
@@ -46,9 +48,11 @@ export default function ProductForm({ initialData = null, isEdit = false }) {
             setPrice(initialData.price || '');
             setCategory(initialData.category?._id || initialData.category || '');
             setDescription(initialData.description || '');
+            setDetailedDescription(initialData.detailedDescription || '');
+            setSpecifications(initialData.specifications || '');
+            setUseCases(initialData.useCases || '');
             setInStock(initialData.inStock !== undefined ? initialData.inStock : true);
             setKeyFeatures(initialData.keyFeatures?.length > 0 ? initialData.keyFeatures : ['']);
-            setSpecifications(initialData.specifications?.length > 0 ? initialData.specifications : [{ label: '', value: '' }]);
             setExistingImages(initialData.images || []);
         }
     }, [initialData]);
@@ -71,13 +75,7 @@ export default function ProductForm({ initialData = null, isEdit = false }) {
     };
     const removeFeature = (index) => setKeyFeatures(keyFeatures.filter((_, i) => i !== index));
 
-    const addSpec = () => setSpecifications([...specifications, { label: '', value: '' }]);
-    const updateSpec = (index, field, value) => {
-        const newSpecs = [...specifications];
-        newSpecs[index][field] = value;
-        setSpecifications(newSpecs);
-    };
-    const removeSpec = (index) => setSpecifications(specifications.filter((_, i) => i !== index));
+
 
     // --- Image Handlers ---
     const handleImageChange = (e) => {
@@ -103,7 +101,7 @@ export default function ProductForm({ initialData = null, isEdit = false }) {
     };
 
     const removeExistingImage = (index) => {
-        -(existingImages.filter((_, i) => i !== index));
+        setExistingImages(existingImages.filter((_, i) => i !== index));
     };
 
     const moveExistingUp = (index) => {
@@ -122,48 +120,48 @@ export default function ProductForm({ initialData = null, isEdit = false }) {
 
     // --- Submission ---
     const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
+        e.preventDefault();
+        setSubmitting(true);
 
-    try {
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('price', price);
-        formData.append('category', category);
-        formData.append('description', description);
-        formData.append('inStock', inStock);
+        try {
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('price', price);
+            formData.append('category', category);
+            formData.append('description', description);
+            formData.append('detailedDescription', detailedDescription);
+            formData.append('specifications', specifications);
+            formData.append('useCases', useCases);
+            formData.append('inStock', inStock);
 
-        const filteredFeatures = keyFeatures.filter(f => f.trim() !== '');
-        const filteredSpecs = specifications.filter(s => s.label.trim() !== '' && s.value.trim() !== '');
+            const filteredFeatures = keyFeatures.filter(f => f.trim() !== '');
+            formData.append('keyFeatures', JSON.stringify(filteredFeatures));
 
-        formData.append('keyFeatures', JSON.stringify(filteredFeatures));
-        formData.append('specifications', JSON.stringify(filteredSpecs));
+            // --- THE FIX: Send the list of existing images to keep ---
+            // This tells the backend: "Only keep these URLs, delete anything else"
+            formData.append('existingImages', JSON.stringify(existingImages));
 
-        // --- THE FIX: Send the list of existing images to keep ---
-        // This tells the backend: "Only keep these URLs, delete anything else"
-        formData.append('existingImages', JSON.stringify(existingImages));
+            // Append new files
+            imageFiles.forEach(file => {
+                formData.append('images', file);
+            });
 
-        // Append new files
-        imageFiles.forEach(file => {
-            formData.append('images', file);
-        });
+            if (isEdit) {
+                await productAPI.update(initialData._id, formData);
+                toast.success('Product updated successfully');
+            } else {
+                await productAPI.create(formData);
+                toast.success('Product published successfully');
+            }
 
-        if (isEdit) {
-            await productAPI.update(initialData._id, formData);
-            toast.success('Product updated successfully');
-        } else {
-            await productAPI.create(formData);
-            toast.success('Product published successfully');
+            router.push('/admin/products');
+        } catch (error) {
+            console.error('Error saving product:', error);
+            toast.error('Error saving product');
+        } finally {
+            setSubmitting(false);
         }
-
-        router.push('/admin/products');
-    } catch (error) {
-        console.error('Error saving product:', error);
-        toast.error('Error saving product');
-    } finally {
-        setSubmitting(false);
-    }
-};
+    };
     return (
         <form onSubmit={handleSubmit} className="space-y-12 max-w-5xl mx-auto pb-20">
             <div className="flex items-center justify-between border-b border-gray-100 pb-8">
@@ -268,40 +266,71 @@ export default function ProductForm({ initialData = null, isEdit = false }) {
                         </div>
                     </div>
 
+                    {/* Detailed Description Card */}
+                    <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
+                        <h3 className="text-xl font-bold flex items-center text-gray-900">
+                            <FaInfoCircle className="mr-3 text-red-600" /> Detailed Description
+                        </h3>
+                        <div>
+                            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Full Product Details</label>
+                            <textarea
+                                value={detailedDescription}
+                                onChange={(e) => setDetailedDescription(e.target.value)}
+                                rows="8"
+                                className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-medium resize-none"
+                                placeholder="Provide comprehensive product information, features, benefits, etc."
+                            ></textarea>
+                        </div>
+                    </div>
+
                     {/* Specifications Card */}
                     <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
-                        <div className="flex justify-between items-center">
-                            <h3 className="text-xl font-bold flex items-center text-gray-900">
-                                <FaTable className="mr-3 text-red-600" /> Specifications
-                            </h3>
-                            <button
-                                type="button" onClick={addSpec}
-                                className="text-red-600 text-xs font-black uppercase tracking-widest flex items-center hover:bg-red-50 px-3 py-1 rounded-lg transition-colors"
-                            >
-                                <FaPlus className="mr-2" /> Add Row
-                            </button>
+                        <h3 className="text-xl font-bold flex items-center text-gray-900">
+                            <FaTable className="mr-3 text-red-600" /> Technical Specifications
+                        </h3>
+                        <div>
+                            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Product Specs</label>
+                            <div className="mb-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                                <p className="text-xs font-bold text-blue-900 mb-2">📋 Formatting Guide:</p>
+                                <p className="text-xs text-blue-800 leading-relaxed">
+                                    Add section headings (e.g., "SPECIFICATIONS", "POWERING") on separate lines, then add key-value pairs below each heading using format: <code className="bg-blue-100 px-1 rounded">Key: Value</code>
+                                </p>
+                                <p className="text-xs text-blue-700 mt-2 italic">
+                                    Example:<br />
+                                    SPECIFICATIONS<br />
+                                    Product Code: E60iUGS<br />
+                                    CPU: EN7562CT<br />
+                                    RAM Size: 512 MB<br />
+                                    <br />
+                                    POWERING<br />
+                                    Max Power: 23 W<br />
+                                    DC Input: 12-57 V
+                                </p>
+                            </div>
+                            <textarea
+                                value={specifications}
+                                onChange={(e) => setSpecifications(e.target.value)}
+                                rows="12"
+                                className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-mono text-sm resize-none"
+                                placeholder="SPECIFICATIONS&#10;Product Code: E60iUGS&#10;Suggested Price: $69.00&#10;Architecture: ARM 32bit&#10;CPU: EN7562CT&#10;&#10;POWERING&#10;Number of DC Inputs: 2&#10;Max Power Consumption: 23 W"
+                            ></textarea>
                         </div>
+                    </div>
 
-                        <div className="space-y-4">
-                            {specifications.map((spec, idx) => (
-                                <div key={idx} className="grid grid-cols-2 gap-4 items-center bg-gray-50/50 p-4 rounded-2xl relative group">
-                                    <div>
-                                        <input
-                                            type="text" value={spec.label} onChange={(e) => updateSpec(idx, 'label', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-100 rounded-xl outline-none font-bold text-sm text-gray-800"
-                                            placeholder="Label (e.g. Dimensions)"
-                                        />
-                                    </div>
-                                    <div>
-                                        <input
-                                            type="text" value={spec.value} onChange={(e) => updateSpec(idx, 'value', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-100 rounded-xl outline-none font-medium text-sm text-gray-600"
-                                            placeholder="Value (e.g. 40x20 in)"
-                                        />
-                                    </div>
-                                    <button type="button" onClick={() => removeSpec(idx)} className="absolute -top-2 -right-2 bg-white shadow-md text-gray-300 hover:text-red-500 rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><FaTrash className="text-xs" /></button>
-                                </div>
-                            ))}
+                    {/* Use Cases Card */}
+                    <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
+                        <h3 className="text-xl font-bold flex items-center text-gray-900">
+                            <FaList className="mr-3 text-red-600" /> Applications & Use Cases
+                        </h3>
+                        <div>
+                            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Where to Use This Product</label>
+                            <textarea
+                                value={useCases}
+                                onChange={(e) => setUseCases(e.target.value)}
+                                rows="8"
+                                className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-medium resize-none"
+                                placeholder="Describe ideal use cases, applications, and scenarios for this product"
+                            ></textarea>
                         </div>
                     </div>
                 </div>

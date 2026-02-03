@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import ProductCard from '../../components/ProductCard';
 import Loading from '../../components/Loading';
 import ErrorMessage from '../../components/ErrorMessage';
-import { productAPI } from '../../lib/api';
+import { productAPI, categoryAPI } from '../../lib/api';
+import { optimizeImage } from '../../lib/imageUpload';
 import { FaSearch, FaFilter, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 /**
@@ -13,22 +15,48 @@ import { FaSearch, FaFilter, FaChevronLeft, FaChevronRight } from 'react-icons/f
  */
 export default function AllProductsPage() {
     const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
+    // Fetch Categories
     useEffect(() => {
-        const fetchAllProducts = async () => {
+        const fetchCategories = async () => {
+            try {
+                const res = await categoryAPI.getAll();
+                setCategories(res.data);
+            } catch (err) {
+                console.error("Error fetching categories:", err);
+            }
+        };
+        fetchCategories();
+    }, []);
+
+    // Fetch Products (All or By Category)
+    useEffect(() => {
+        const fetchProducts = async () => {
             try {
                 setLoading(true);
-                const res = await productAPI.getAll({ page: currentPage, limit: 12 });
-                const data = res.data.products || res.data;
-                setProducts(data);
-                setFilteredProducts(data);
-                setTotalPages(res.data.pages || 1);
+                let res;
+                if (selectedCategory) {
+                    res = await productAPI.getByCategory(selectedCategory);
+                    // Standardize response structure since getByCategory might return array directly or object
+                    const data = Array.isArray(res.data) ? res.data : (res.data.products || []);
+                    setProducts(data);
+                    setFilteredProducts(data);
+                    setTotalPages(1); // No pagination for category view for now
+                } else {
+                    res = await productAPI.getAll({ page: currentPage, limit: 12 });
+                    const data = res.data.products || res.data;
+                    setProducts(data);
+                    setFilteredProducts(data);
+                    setTotalPages(res.data.pages || 1);
+                }
             } catch (err) {
                 console.error('Error fetching products:', err);
                 setError('Failed to load products. Please try again later.');
@@ -37,18 +65,21 @@ export default function AllProductsPage() {
             }
         };
 
-        fetchAllProducts();
-        window.scrollTo(0, 0); // Scroll to top on page change
-    }, [currentPage]);
+        fetchProducts();
+        if (!selectedCategory) {
+            window.scrollTo(0, 0);
+        }
+    }, [currentPage, selectedCategory]);
 
     // Reset page on search
     const handleSearch = (e) => {
         setSearchTerm(e.target.value);
-        setCurrentPage(1);
+        if (!selectedCategory) setCurrentPage(1);
     };
 
-    // Handle Search
+    // Handle Search Filter (Client-side)
     useEffect(() => {
+        if (!products) return;
         const results = products.filter(product =>
             product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             product.category?.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -56,7 +87,13 @@ export default function AllProductsPage() {
         setFilteredProducts(results);
     }, [searchTerm, products]);
 
-    if (loading) {
+    const handleCategoryClick = (categoryId) => {
+        setSelectedCategory(categoryId === selectedCategory ? null : categoryId);
+        setCurrentPage(1);
+        setSearchTerm('');
+    };
+
+    if (loading && products.length === 0) {
         return <Loading fullScreen />;
     }
 
@@ -73,10 +110,10 @@ export default function AllProductsPage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* Header & Search Section */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 md:mb-16 gap-6 md:gap-10">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-6 md:gap-10">
                     <div className="text-center md:text-left">
                         <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">
-                            All Products
+                            {selectedCategory ? (categories.find(c => c._id === selectedCategory)?.name || 'Products') : 'All Products'}
                         </h1>
                         <p className="text-gray-500 font-medium text-sm md:text-base">
                             Discover our complete collection of premium items.
@@ -89,7 +126,7 @@ export default function AllProductsPage() {
                         </div>
                         <input
                             type="text"
-                            placeholder="Search products or categories..."
+                            placeholder="Search products..."
                             value={searchTerm}
                             onChange={handleSearch}
                             className="block w-full pl-11 pr-4 py-4 bg-white border border-gray-100 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all text-sm font-medium"
@@ -97,10 +134,46 @@ export default function AllProductsPage() {
                     </div>
                 </div>
 
+                {/* Categories List (Horizontal Scroll) */}
+                <div className="mb-10">
+                    <div className="flex overflow-x-auto pb-4 gap-4 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+                        {/* All Option */}
+                        <div
+                            onClick={() => handleCategoryClick(null)}
+                            className={`flex-shrink-0 cursor-pointer flex flex-col items-center gap-2 group min-w-[80px] ${selectedCategory === null ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
+                        >
+                            <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center transition-all ${selectedCategory === null ? 'bg-red-600 text-white shadow-lg shadow-red-200 scale-105' : 'bg-white border border-gray-200 group-hover:border-red-200'}`}>
+                                <span className="font-bold text-lg">All</span>
+                            </div>
+                            <span className={`text-xs font-bold ${selectedCategory === null ? 'text-red-600' : 'text-gray-500'}`}>View All</span>
+                        </div>
+
+                        {categories.map((category) => (
+                            <div
+                                key={category._id}
+                                onClick={() => handleCategoryClick(category._id)}
+                                className={`flex-shrink-0 cursor-pointer flex flex-col items-center gap-2 group min-w-[80px] ${selectedCategory === category._id ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
+                            >
+                                <div className={`relative w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden transition-all ${selectedCategory === category._id ? 'ring-2 ring-red-600 ring-offset-2 scale-105 shadow-lg' : 'bg-white border border-gray-200 group-hover:border-red-200'}`}>
+                                    <Image
+                                        src={optimizeImage(category.image)}
+                                        alt={category.name}
+                                        fill
+                                        className="object-cover"
+                                    />
+                                </div>
+                                <span className={`text-xs font-bold max-w-[80px] text-center truncate ${selectedCategory === category._id ? 'text-red-600' : 'text-gray-500'}`}>
+                                    {category.name}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
                 {/* Results Info */}
                 <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-8">
                     <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">
-                        {searchTerm ? `Results for "${searchTerm}"` : 'Showing all products'}
+                        {searchTerm ? `Results for "${searchTerm}"` : (selectedCategory ? 'Category Results' : 'Showing all products')}
                         <span className="ml-2 text-red-600">({filteredProducts.length})</span>
                     </p>
                     <div className="flex items-center text-gray-400 text-sm italic">
@@ -111,7 +184,7 @@ export default function AllProductsPage() {
 
                 {/* Products Grid */}
                 {filteredProducts.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
                         {filteredProducts.map((product) => (
                             <ProductCard key={product._id} product={product} />
                         ))}
@@ -119,19 +192,21 @@ export default function AllProductsPage() {
                 ) : (
                     <div className="bg-white rounded-3xl p-20 text-center shadow-sm border border-dashed border-gray-200 mt-10">
                         <div className="text-6xl mb-6">🔍</div>
-                        <h3 className="text-2xl font-bold text-gray-800 mb-2">No matches found</h3>
-                        <p className="text-gray-500 mb-8">Try adjusting your search terms to find what you're looking for.</p>
+                        <h3 className="text-2xl font-bold text-gray-800 mb-2">No products found</h3>
+                        <p className="text-gray-500 mb-8">
+                            {searchTerm ? "Try adjusting your search terms." : "This category is currently empty."}
+                        </p>
                         <button
-                            onClick={() => setSearchTerm('')}
+                            onClick={() => { setSearchTerm(''); setSelectedCategory(null); }}
                             className="bg-red-50 text-red-600 px-6 py-2 rounded-lg font-bold hover:bg-red-100 transition-colors"
                         >
-                            Clear Search
+                            Clear Filters
                         </button>
                     </div>
                 )}
 
-                {/* Pagination Controls */}
-                {totalPages > 1 && !searchTerm && (
+                {/* Pagination Controls (Only show when NO category is selected) */}
+                {!selectedCategory && totalPages > 1 && !searchTerm && (
                     <div className="mt-16 flex justify-center items-center space-x-4">
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}

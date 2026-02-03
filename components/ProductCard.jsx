@@ -22,7 +22,7 @@ const ProductCard = ({ product }) => {
         <Link href={`/product/${product._id}`}>
             <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col h-full">
                 {/* Product Image Container */}
-                <div className="relative h-64 w-full overflow-hidden">
+                <div className="relative h-32 md:h-64 w-full overflow-hidden bg-gray-50">
                     <Image
                         src={mainImage}
                         alt={product.name}
@@ -33,26 +33,26 @@ const ProductCard = ({ product }) => {
 
                     {/* Availability Badge */}
                     {!product.inStock && (
-                        <div className="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                        <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                             Out of Stock
                         </div>
                     )}
                 </div>
 
                 {/* Product Details */}
-                <div className="p-5 flex flex-col flex-grow">
+                <div className="p-3 md:p-5 flex flex-col flex-grow">
                     {/* Category Tag */}
-                    <span className="text-xs font-bold text-red-600 uppercase tracking-widest mb-2">
+                    <span className="text-[10px] md:text-xs font-bold text-red-600 uppercase tracking-widest mb-1 md:mb-2">
                         {product.category?.name || 'Uncategorized'}
                     </span>
 
                     {/* Product Name */}
-                    <h3 className="text-gray-900 font-bold text-lg mb-2 line-clamp-1 group-hover:text-red-600 transition-colors">
+                    <h3 className="text-gray-900 font-bold text-sm md:text-lg mb-1 md:mb-2 line-clamp-1 group-hover:text-red-600 transition-colors">
                         {product.name}
                     </h3>
 
                     {/* Brief Description */}
-                    <p className="text-gray-500 text-sm line-clamp-2 mb-4 flex-grow">
+                    <p className="text-gray-500 text-xs md:text-sm line-clamp-2 mb-2 md:mb-4 flex-grow">
                         {product.description}
                     </p>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import dynamic from 'next/dynamic';
 const Carousel = dynamic(() => import('../components/Carousel'), {
     ssr: false,
@@ -21,7 +22,7 @@ export default function HomeClient({ initialBanners, initialCategories, initialP
 
     useEffect(() => {
         const fetchFeatured = async () => {
-            
+
             // Adding a timestamp ensures the browser doesn't use a cached version
             const res = await productAPI.getFeatured({ _t: Date.now() });
             setProducts(res.data);
@@ -129,14 +130,20 @@ export default function HomeClient({ initialBanners, initialCategories, initialP
                             <h2 className="text-red-600 font-bold tracking-widest uppercase text-xs md:text-sm mb-2">Exclusive Collection</h2>
                             <h3 className="text-2xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Featured Products</h3>
                         </div>
-                        <button className="hidden md:block text-red-600 font-bold hover:underline">View All Products →</button>
+                        <Link href="/products" className="hidden md:block text-red-600 font-bold hover:underline">
+                            View All Products →
+                        </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 md:gap-6 pb-6 -mx-6 px-6 scrollbar-hide md:scrollbar-default">
                         {products && products.length > 0 ? (
                             products.map((product) => (
                                 // Only render if product has images
-                                product?.images?.length > 0 && <ProductCard key={product._id} product={product} />
+                                product?.images?.length > 0 && (
+                                    <div key={product._id} className="min-w-[160px] w-[160px] md:min-w-[280px] md:w-[280px] snap-center">
+                                        <ProductCard product={product} />
+                                    </div>
+                                )
                             ))
                         ) : (
                             <p>No featured products found.</p>
@@ -144,9 +151,11 @@ export default function HomeClient({ initialBanners, initialCategories, initialP
                     </div>
 
                     <div className="mt-12 text-center md:hidden">
-                        <button className="bg-red-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-red-200">
-                            View All Products
-                        </button>
+                        <Link href="/products">
+                            <button className="bg-red-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-red-200">
+                                View All Products
+                            </button>
+                        </Link>
                     </div>
                 </div>
             </section>
