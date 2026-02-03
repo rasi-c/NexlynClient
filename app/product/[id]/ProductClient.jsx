@@ -49,7 +49,7 @@ export default function ProductClient({ id, initialProduct }) {
     if (error || !product) {
         return (
             <div className="min-h-screen pt-28">
-                <ErrorMessage message={error || 'Product not found'} onRetry={() => window.location.href = '/'} />
+                <ErrorMessage message={error || 'Product not found'} onRetry={() => window.location.reload()} />
             </div>
         );
     }
@@ -109,7 +109,7 @@ export default function ProductClient({ id, initialProduct }) {
                                     </h1>
                                     <div className="flex flex-wrap items-center gap-4">
                                         <span className="text-3xl md:text-4xl font-black text-red-600">
-                                            ${product.price.toLocaleString('en-AE')}
+                                            ${product.price.toLocaleString('en-US')}
                                         </span>
                                         {product.inStock ? (
                                             <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full flex items-center">
@@ -211,7 +211,7 @@ export default function ProductClient({ id, initialProduct }) {
                         "offers": {
                             "@type": "Offer",
                             "url": `${process.env.NEXT_PUBLIC_SITE_URL}/product/${product._id}`,
-                            "priceCurrency": "INR",
+                            "priceCurrency": "USD",
                             "price": product.price,
                             "availability": product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
                         }

@@ -103,7 +103,7 @@ export default function ProductForm({ initialData = null, isEdit = false }) {
     };
 
     const removeExistingImage = (index) => {
-        setExistingImages(existingImages.filter((_, i) => i !== index));
+        -(existingImages.filter((_, i) => i !== index));
     };
 
     const moveExistingUp = (index) => {

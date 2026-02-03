@@ -22,7 +22,7 @@ const CategoryCard = ({ category }) => {
                         src={optimizeImage(category.image) || '/placeholder-category.png'}
                         alt={category.name}
                         fill
-                        className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
+                        className="object-contain group-hover:scale-110 transition-transform duration-700 ease-in-out"
                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                     />
                     {/* Subtle Overlay to ensure text readability if needed */}

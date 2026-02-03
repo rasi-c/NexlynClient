@@ -9,18 +9,24 @@ import { FaPlus, FaEdit, FaTrash, FaCheck, FaTimes, FaImage, FaLink, FaSort } fr
 export default function BannersPage() {
     const [banners, setBanners] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingBanner, setEditingBanner] = useState(null);
-
     // Form State
     const [formData, setFormData] = useState({
         title: '',
         link: '',
         order: 0,
-        isActive: true,
+        active: true,
     });
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingBanner, setEditingBanner] = useState(null);
+
+    // State for Product Image
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+
+    // State for Background Image
+    const [bgImageFile, setBgImageFile] = useState(null);
+    const [bgImagePreview, setBgImagePreview] = useState(null);
+
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -47,14 +53,17 @@ export default function BannersPage() {
                 title: banner.title || '',
                 link: banner.link || '',
                 order: banner.order || 0,
-                isActive: banner.isActive,
+                active: banner.active !== undefined ? banner.active : true,
             });
             setImagePreview(banner.image);
+            setBgImagePreview(banner.backgroundImage || null);
         } else {
             setEditingBanner(null);
-            setFormData({ title: '', link: '', order: 0, isActive: true });
+            setFormData({ title: '', link: '', order: 0, active: true });
             setImagePreview(null);
             setImageFile(null);
+            setBgImagePreview(null);
+            setBgImageFile(null);
         }
         setIsModalOpen(true);
     };
@@ -64,9 +73,11 @@ export default function BannersPage() {
         setEditingBanner(null);
         setImageFile(null);
         setImagePreview(null);
+        setBgImageFile(null);
+        setBgImagePreview(null);
     };
 
-    const handleImageChange = (e) => {
+    const handleImageChange = (e, type) => {
         const file = e.target.files[0];
         if (file) {
             const error = validateImage(file);
@@ -74,8 +85,13 @@ export default function BannersPage() {
                 toast.error(error);
                 return;
             }
-            setImageFile(file);
-            setImagePreview(URL.createObjectURL(file));
+            if (type === 'image') {
+                setImageFile(file);
+                setImagePreview(URL.createObjectURL(file));
+            } else if (type === 'backgroundImage') {
+                setBgImageFile(file);
+                setBgImagePreview(URL.createObjectURL(file));
+            }
         }
     };
 
@@ -88,17 +104,20 @@ export default function BannersPage() {
             data.append('title', formData.title);
             data.append('link', formData.link);
             data.append('order', formData.order);
-            data.append('isActive', formData.isActive);
+            data.append('active', formData.active);
 
             if (imageFile) {
                 data.append('image', imageFile);
+            }
+            if (bgImageFile) {
+                data.append('backgroundImage', bgImageFile);
             }
 
             if (editingBanner) {
                 await bannerAPI.update(editingBanner._id, data);
             } else {
                 if (!imageFile) {
-                    toast.error('Image is required for new banners');
+                    toast.error('Main product image is required');
                     setSubmitting(false);
                     return;
                 }
@@ -155,7 +174,8 @@ export default function BannersPage() {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-gray-50 border-b border-gray-100">
-                                <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest">Image</th>
+                                <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest">Main Image</th>
+                                <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest">Background</th>
                                 <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest">Title</th>
                                 <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">Order</th>
                                 <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">Status</th>
@@ -167,7 +187,16 @@ export default function BannersPage() {
                                 <tr key={banner._id} className="hover:bg-gray-50/50 transition-colors">
                                     <td className="px-8 py-5">
                                         <div className="w-24 h-12 bg-gray-100 rounded-lg overflow-hidden relative border border-gray-100">
-                                            <img src={banner.image} alt={banner.title} className="w-full h-full object-cover" />
+                                            <img src={banner.image} alt="Main" className="w-full h-full object-contain p-1" />
+                                        </div>
+                                    </td>
+                                    <td className="px-8 py-5">
+                                        <div className="w-24 h-12 bg-gray-800 rounded-lg overflow-hidden relative border border-gray-100">
+                                            {banner.backgroundImage ? (
+                                                <img src={banner.backgroundImage} alt="Bg" className="w-full h-full object-cover opacity-50" />
+                                            ) : (
+                                                <span className="text-[10px] text-white flex items-center justify-center h-full">None</span>
+                                            )}
                                         </div>
                                     </td>
                                     <td className="px-8 py-5 font-bold text-gray-900 text-sm">
@@ -178,7 +207,7 @@ export default function BannersPage() {
                                     </td>
                                     <td className="px-8 py-5">
                                         <div className="flex justify-center">
-                                            {banner.isActive ? (
+                                            {banner.active ? (
                                                 <span className="flex items-center text-green-600 bg-green-50 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">
                                                     <FaCheck className="mr-1" /> Active
                                                 </span>
@@ -226,24 +255,48 @@ export default function BannersPage() {
 
                         <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
                             <div className="space-y-4">
-                                {/* Image Upload Area */}
-                                <div className="relative group">
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Banner Image</label>
-                                    <div className="relative h-48 w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl overflow-hidden flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-colors">
-                                        <input
-                                            type="file"
-                                            onChange={handleImageChange}
-                                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                                            accept="image/*"
-                                        />
-                                        {imagePreview ? (
-                                            <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <>
-                                                <FaImage className="text-4xl text-gray-300 mb-2" />
-                                                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Click to Upload</span>
-                                            </>
-                                        )}
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    {/* Main Image Input */}
+                                    <div className="relative group">
+                                        <label className="block text-xs font-bold text-gray-700 mb-2">Product Image (Foreground)</label>
+                                        <div className="relative h-32 w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl overflow-hidden flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-colors">
+                                            <input
+                                                type="file"
+                                                onChange={(e) => handleImageChange(e, 'image')}
+                                                className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                                accept="image/*"
+                                            />
+                                            {imagePreview ? (
+                                                <img src={imagePreview} alt="Preview" className="w-full h-full object-contain p-2" />
+                                            ) : (
+                                                <>
+                                                    <FaImage className="text-2xl text-gray-300 mb-1" />
+                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Main</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Background Image Input */}
+                                    <div className="relative group">
+                                        <label className="block text-xs font-bold text-gray-700 mb-2">Background Image</label>
+                                        <div className="relative h-32 w-full bg-gray-900 border-2 border-dashed border-gray-700 rounded-2xl overflow-hidden flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-colors">
+                                            <input
+                                                type="file"
+                                                onChange={(e) => handleImageChange(e, 'backgroundImage')}
+                                                className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                                accept="image/*"
+                                            />
+                                            {bgImagePreview ? (
+                                                <img src={bgImagePreview} alt="Preview" className="w-full h-full object-cover opacity-60" />
+                                            ) : (
+                                                <>
+                                                    <FaImage className="text-2xl text-gray-500 mb-1" />
+                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">BG (Optional)</span>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -283,8 +336,8 @@ export default function BannersPage() {
                                         <label className="flex items-center cursor-pointer group">
                                             <input
                                                 type="checkbox"
-                                                checked={formData.isActive}
-                                                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                                                checked={formData.active}
+                                                onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
                                                 className="w-5 h-5 rounded-md border-gray-300 text-red-600 focus:ring-blue-600 transition-all cursor-pointer"
                                             />
                                             <span className="ml-3 text-sm font-bold text-gray-700 group-hover:text-red-600 transition-colors">Active Banner</span>
