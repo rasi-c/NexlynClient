@@ -260,10 +260,10 @@ export default function ProductClient({ id, initialProduct }) {
                                 {/* Key Features Quick List */}
                                 {product.keyFeatures && product.keyFeatures.length > 0 && (
                                     <ul className="space-y-2.5 pt-2">
-                                        {product.keyFeatures.slice(0, 5).map((feature, idx) => (
-                                            <li key={idx} className="flex items-center text-sm font-bold text-gray-700">
-                                                <div className="w-1.5 h-1.5 bg-red-600 rounded-full mr-3 shrink-0"></div>
-                                                <span className="line-clamp-1">{feature}</span>
+                                        {product.keyFeatures.map((feature, idx) => (
+                                            <li key={idx} className="flex items-start text-sm font-bold text-gray-700">
+                                                <div className="w-1.5 h-1.5 bg-red-600 rounded-full mr-3 shrink-0 mt-2"></div>
+                                                <span className="break-words">{feature}</span>
                                             </li>
                                         ))}
                                     </ul>
