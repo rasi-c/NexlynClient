@@ -20,42 +20,44 @@ export default function HomeClient({ initialBanners, initialCategories, initialP
     const [loading, setLoading] = useState(!initialBanners);
     const [error, setError] = useState(null);
 
+    // Simplified fetching logic to avoid race conditions and redundant calls
     useEffect(() => {
-        const fetchFeatured = async () => {
-
-            // Adding a timestamp ensures the browser doesn't use a cached version
-            const res = await productAPI.getFeatured({ _t: Date.now() });
-            setProducts(res.data);
-        };
-        fetchFeatured();
-    }, []);
-
-    useEffect(() => {
-
         const fetchData = async () => {
-            // if (initialBanners) return;
-            try {
+            // Only show loading if we don't have initial data to prevent flickering
+            const hasDataAlready = initialBanners?.length > 0 || initialCategories?.length > 0 || initialProducts?.length > 0;
+            if (!hasDataAlready) {
                 setLoading(true);
+            }
+
+            try {
                 const [bannerRes, categoryRes, productRes] = await Promise.all([
                     bannerAPI.getAll(),
                     categoryAPI.getAll(),
-                    productAPI.getAll()
+                    productAPI.getAll({ _t: Date.now() }) // Prevent API caching
                 ]);
 
-                setBanners(bannerRes.data);
-                setCategories(categoryRes.data);
+                if (bannerRes.data) setBanners(bannerRes.data);
+                if (categoryRes.data) setCategories(categoryRes.data);
+
                 const fetchedProducts = productRes.data.products || productRes.data;
-                setProducts(fetchedProducts.slice(0, 8));
+                if (Array.isArray(fetchedProducts)) {
+                    setProducts(fetchedProducts.slice(0, 8));
+                } else if (fetchedProducts && Array.isArray(fetchedProducts.products)) {
+                    setProducts(fetchedProducts.products.slice(0, 8));
+                }
             } catch (err) {
                 console.error('Error fetching data:', err);
-                setError('Failed to load content. Please try again later.');
+                // Only set error if we don't have ANY data to show
+                if (!hasDataAlready) {
+                    setError('Failed to load content. Please try again later.');
+                }
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [initialBanners]);
+    }, [initialBanners, initialCategories, initialProducts]);
 
     if (loading) {
         return <Loading fullScreen />;

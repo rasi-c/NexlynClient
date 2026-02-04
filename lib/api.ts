@@ -1,13 +1,26 @@
 import axios from 'axios';
 
 // Determine if we are on local or production
-const isProd = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
+// Use environment variable if available, otherwise fallback to logic
+const getBaseURL = () => {
+    // If explicit API URL is set in env, use it (works in both environments)
+    if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+
+    // Browser context
+    if (typeof window !== 'undefined') {
+        return window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1')
+            ? 'http://localhost:5000/api'
+            : 'https://backend.nexlyndistribution.com/api';
+    }
+
+    // Server context (SSR)
+    return process.env.NODE_ENV === 'production'
+        ? 'https://backend.nexlyndistribution.com/api'
+        : 'http://localhost:5000/api';
+};
 
 const API = axios.create({
-    // Use your actual backend domain here
-    baseURL: isProd
-        ? 'https://backend.nexlyndistribution.com/api' // Replace with your actual live API URL
-        : 'http://localhost:5000/api',
+    baseURL: getBaseURL(),
     headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache',
