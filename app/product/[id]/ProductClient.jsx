@@ -253,9 +253,21 @@ export default function ProductClient({ id, initialProduct }) {
                                 </div>
 
                                 {/* Short Description */}
-                                <p className="text-gray-600 text-base leading-relaxed">
+                                <p className="text-gray-600 text-base leading-relaxed break-words overflow-hidden">
                                     {product.description}
                                 </p>
+
+                                {/* Key Features Quick List */}
+                                {product.keyFeatures && product.keyFeatures.length > 0 && (
+                                    <ul className="space-y-2.5 pt-2">
+                                        {product.keyFeatures.slice(0, 5).map((feature, idx) => (
+                                            <li key={idx} className="flex items-center text-sm font-bold text-gray-700">
+                                                <div className="w-1.5 h-1.5 bg-red-600 rounded-full mr-3 shrink-0"></div>
+                                                <span className="line-clamp-1">{feature}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
 
                                 {/* Stock Status */}
                                 {product.inStock ? (
@@ -317,7 +329,7 @@ export default function ProductClient({ id, initialProduct }) {
                                         {/* Use Cases / Application Text */}
                                         {product.useCases && (
                                             <div className="prose prose-gray max-w-none">
-                                                <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                                                <div className="text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
                                                     {product.useCases}
                                                 </div>
                                             </div>
@@ -375,7 +387,6 @@ export default function ProductClient({ id, initialProduct }) {
                                                         className="group relative block overflow-hidden rounded-2xl bg-gray-50 border border-gray-100 transition-all hover:shadow-xl hover:-translate-y-1"
                                                     >
                                                         <div className="relative aspect-video w-full bg-white flex items-center justify-center overflow-hidden">
-                                                            {/* We use a stylized document preview for technical datasheets */}
                                                             <div className="absolute inset-0 bg-gray-50 flex flex-col p-4 opacity-40 group-hover:opacity-60 transition-opacity">
                                                                 <div className="w-full h-4 bg-gray-300 rounded-sm mb-2"></div>
                                                                 <div className="w-2/3 h-3 bg-gray-200 rounded-sm mb-4"></div>
@@ -402,7 +413,6 @@ export default function ProductClient({ id, initialProduct }) {
                                                                 <span className="block font-black text-gray-900 uppercase tracking-widest text-[10px] mt-3">Tech Datasheet</span>
                                                             </div>
 
-                                                            {/* Overlay for "Open PDF" */}
                                                             <div className="absolute inset-0 bg-red-600/0 group-hover:bg-red-600/10 transition-colors flex items-center justify-center">
                                                                 <div className="bg-red-600 text-white px-4 py-2 rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 transition-all transform translate-y-4 group-hover:translate-y-0">
                                                                     View Document
@@ -433,11 +443,11 @@ export default function ProductClient({ id, initialProduct }) {
                                 ) : (
                                     <>
                                         {tab.content ? (
-                                            <div className="prose prose-gray max-w-none">
+                                            <div className="prose prose-gray max-w-none text-gray-700">
                                                 {tab.id === 'specifications' ? (
                                                     <SpecificationsTable content={tab.content} />
                                                 ) : (
-                                                    <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                                                    <div className="leading-relaxed whitespace-pre-wrap break-words">
                                                         {tab.content}
                                                     </div>
                                                 )}
@@ -457,6 +467,6 @@ export default function ProductClient({ id, initialProduct }) {
                     </div>
                 </div>
             </div>
-        </div >
+        </div>
     );
 }
