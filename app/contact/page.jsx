@@ -204,7 +204,7 @@ export default function ContactPage() {
                                     </div>
                                     <div>
                                         <p className="text-gray-400 text-sm font-bold uppercase tracking-wider mb-1">Office</p>
-                                        <p className="text-lg font-medium leading-tight">Deira,Dubai,UAE</p>
+                                        <p className="text-lg font-medium leading-tight">Dubai,UAE</p>
                                     </div>
                                 </div>
                             </div>
